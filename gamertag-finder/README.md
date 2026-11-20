@@ -9,7 +9,7 @@ safe, official checking method is verified.
 
 - [x] Stage 1 – Create the project folder structure.
 - [x] Stage 2 – Create the main application entry point.
-- [ ] Stage 3 – Build the TXT gamertag importer.
+- [x] Stage 3 – Build the TXT gamertag importer.
 - [ ] Stage 4 – Build the gamertag validation system.
 - [ ] Stage 5 – Investigate and implement a verified availability-checking method.
 - [ ] Stage 6 – Build the results display and status indicators.
@@ -23,8 +23,8 @@ safe, official checking method is verified.
 - [ ] Stage 14 – Review security, dependencies and unexpected behaviour.
 - [ ] Stage 15 – Prepare the finished project for download and local Windows use.
 
-Stages 1 and 2 are complete. Stage 2 adds only the launcher, menu, and
-placeholder responses; the listed product features are not implemented yet.
+Stages 1 through 3 are complete. The remaining product features are not
+implemented yet.
 
 ## Planned folder structure
 
@@ -69,8 +69,10 @@ gamertag-finder/
 
 `main.py`, `src/gamertag_finder/__init__.py`,
 `src/gamertag_finder/__main__.py`, `src/gamertag_finder/app.py`,
-`src/gamertag_finder/menu.py`, and `tests/test_app.py` are implemented in Stage
-2. Other `.py` files in the tree are planned for later stages.
+`src/gamertag_finder/menu.py`, and `tests/test_app.py` were implemented in Stage
+2. Stage 3 adds `src/gamertag_finder/importer.py` and
+`tests/test_importer.py`. Other `.py` files in the tree are planned for later
+stages.
 `data/imports/` and `data/exports/` are ready for local files. Add
 `gamertags.txt` and `proxies.txt` to `data/imports/` when implementing the
 relevant stages.
@@ -82,8 +84,9 @@ relevant stages.
 - `src/gamertag_finder/__init__.py` — marks the source folder as a Python package.
 - `src/gamertag_finder/__main__.py` — supports launching the package with
   `python -m gamertag_finder`.
-- `src/gamertag_finder/app.py` — runs the menu loop, validates selections, exits
-  cleanly, and reports unfinished options without pretending they work.
+- `src/gamertag_finder/app.py` — runs the menu loop, stores imported names for
+  the current session, reports import summaries, and handles unfinished options
+  without pretending they work.
 - `src/gamertag_finder/menu.py` — contains the ASCII banner and menu labels.
   Stage 2 keeps this presentation deliberately simple; the fuller terminal
   styling remains for Stage 11.
@@ -91,8 +94,10 @@ relevant stages.
   export paths and application settings.
 - `src/gamertag_finder/models.py` — defines shared gamertag and result-status
   data structures.
-- `src/gamertag_finder/importer.py` — reads one-name-per-line TXT files and
-  reports unreadable or empty input clearly.
+- `src/gamertag_finder/importer.py` — reads UTF-8 `.txt` files one line at a
+  time, trims entries, skips blank and case-insensitive duplicate names, and
+  returns import counts. Invalid UTF-8 is rejected rather than silently
+  altered.
 - `src/gamertag_finder/validator.py` — checks names against documented rules
   without making network requests.
 - `src/gamertag_finder/availability.py` — owns the availability-checking
@@ -114,7 +119,8 @@ relevant stages.
 ### Planned test modules
 
 - `tests/test_app.py` — checks application startup and menu coordination.
-- `tests/test_importer.py` — checks line parsing, blank lines, and file errors.
+- `tests/test_importer.py` — checks normal, duplicate, blank, empty, missing,
+  unreadable, unusual-character, whitespace, BOM, and invalid-encoding files.
 - `tests/test_validator.py` — checks valid and invalid name cases.
 - `tests/test_availability.py` — checks status handling, including safe
   `UNKNOWN` behavior when no verified method is available.
@@ -153,6 +159,25 @@ code existed at the end of Stage 1, so module tests were deferred then.
 - The menu and app loop live in separate package modules. Unfinished options
   only display “not available yet”; no feature behavior is simulated.
 - `python -m unittest discover -s tests -v` runs the Stage 2 menu tests.
-- Stage 2 tests cover the logo and all menu labels, every unfinished feature
-  option, invalid selections, exit, and end-of-input handling.
+- Stage 2 tests cover the logo and menu labels, the then-unfinished feature
+  options, invalid selections, exit, and end-of-input handling.
 - No third-party packages were installed.
+
+## Stage 3 implementation and verification
+
+- From the menu, choose **Import Gamertags** and enter the path to a `.txt` file.
+  Quoted paths are accepted for Windows paths copied from File Explorer.
+- UTF-8 and UTF-8-with-BOM files are supported. Invalid UTF-8 is reported with
+  instructions to save the file as UTF-8; no replacement characters are
+  inserted.
+- Blank lines are ignored. Outer whitespace is trimmed. Duplicate comparison
+  is case-insensitive, while the spelling and capitalization of the first
+  occurrence are preserved, including duplicates from earlier imports in the
+  same session.
+- Imported names and counts are held in the application session. No name
+  validation or availability check is performed at this stage.
+- `python -m unittest discover -s tests -v` runs the Stage 2 and Stage 3 tests;
+  all 20 tests passed during Stage 3 verification.
+- A live console run imported a sample containing whitespace, a blank line, a
+  case-insensitive duplicate, and a Unicode name; the summary and imported list
+  matched the input.
