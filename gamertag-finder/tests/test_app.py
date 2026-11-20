@@ -1,4 +1,4 @@
-"""Tests for the menu, importer integration, and placeholder behavior."""
+"""Tests for the menu, importer, validation, and placeholder behavior."""
 
 from pathlib import Path
 import sys
@@ -37,7 +37,7 @@ class MainMenuTests(unittest.TestCase):
 
     def test_unfinished_feature_options_are_explicit_placeholders(self):
         for number, label in FEATURE_OPTIONS:
-            if number == "1":
+            if number in {"1", "2"}:
                 continue
             with self.subTest(option=label):
                 output = self.run_app([number, "9"])
@@ -79,6 +79,32 @@ class MainMenuTests(unittest.TestCase):
 
         self.assertIn("Import failed: File does not exist:", output)
         self.assertIn("Exiting Gamertag Finder.", output)
+
+    def test_validation_option_requests_import_when_session_is_empty(self):
+        output = self.run_app(["2", "9"])
+
+        self.assertIn(
+            "No gamertags have been imported. Import a TXT file first.",
+            output,
+        )
+
+    def test_validation_option_displays_separate_results_and_counts(self):
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            input_file = Path(temporary_directory) / "gamertags.txt"
+            input_file.write_text(
+                "P3\nBad#Name\nAlpha Beta\n", encoding="utf-8"
+            )
+
+            output = self.run_app(["1", str(input_file), "2", "9"])
+
+        self.assertIn("Formatting check only; online availability was not checked.", output)
+        self.assertIn("Valid: 2", output)
+        self.assertIn("VALID gamertags:", output)
+        self.assertIn(" - P3", output)
+        self.assertIn(" - Alpha Beta", output)
+        self.assertIn("Invalid: 1", output)
+        self.assertIn("INVALID gamertags:", output)
+        self.assertIn("Bad#Name: Unsupported character U+0023", output)
 
     def test_invalid_selections_are_reported_and_menu_continues(self):
         output = self.run_app(["abc", "10", "", "9"])

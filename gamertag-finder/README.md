@@ -10,7 +10,7 @@ safe, official checking method is verified.
 - [x] Stage 1 – Create the project folder structure.
 - [x] Stage 2 – Create the main application entry point.
 - [x] Stage 3 – Build the TXT gamertag importer.
-- [ ] Stage 4 – Build the gamertag validation system.
+- [x] Stage 4 – Build the gamertag validation system.
 - [ ] Stage 5 – Investigate and implement a verified availability-checking method.
 - [ ] Stage 6 – Build the results display and status indicators.
 - [ ] Stage 7 – Build the manual claim assistant.
@@ -23,8 +23,8 @@ safe, official checking method is verified.
 - [ ] Stage 14 – Review security, dependencies and unexpected behaviour.
 - [ ] Stage 15 – Prepare the finished project for download and local Windows use.
 
-Stages 1 through 3 are complete. The remaining product features are not
-implemented yet.
+Stages 1 through 4 are complete. Availability checking and the remaining
+product features are not implemented yet.
 
 ## Planned folder structure
 
@@ -71,7 +71,8 @@ gamertag-finder/
 `src/gamertag_finder/__main__.py`, `src/gamertag_finder/app.py`,
 `src/gamertag_finder/menu.py`, and `tests/test_app.py` were implemented in Stage
 2. Stage 3 adds `src/gamertag_finder/importer.py` and
-`tests/test_importer.py`. Other `.py` files in the tree are planned for later
+`tests/test_importer.py`. Stage 4 adds `src/gamertag_finder/validator.py` and
+`tests/test_validator.py`. Other `.py` files in the tree are planned for later
 stages.
 `data/imports/` and `data/exports/` are ready for local files. Add
 `gamertags.txt` and `proxies.txt` to `data/imports/` when implementing the
@@ -85,8 +86,8 @@ relevant stages.
 - `src/gamertag_finder/__main__.py` — supports launching the package with
   `python -m gamertag_finder`.
 - `src/gamertag_finder/app.py` — runs the menu loop, stores imported names for
-  the current session, reports import summaries, and handles unfinished options
-  without pretending they work.
+  the current session, reports import summaries and formatting results, and
+  handles unfinished options without pretending they work.
 - `src/gamertag_finder/menu.py` — contains the ASCII banner and menu labels.
   Stage 2 keeps this presentation deliberately simple; the fuller terminal
   styling remains for Stage 11.
@@ -98,8 +99,10 @@ relevant stages.
   time, trims entries, skips blank and case-insensitive duplicate names, and
   returns import counts. Invalid UTF-8 is rejected rather than silently
   altered.
-- `src/gamertag_finder/validator.py` — checks names against documented rules
-  without making network requests.
+- `src/gamertag_finder/validator.py` — checks modern gamertags against the
+  documented character ranges and length rules without making network
+  requests. A valid result means formatting-only; it does not mean available
+  or claimable.
 - `src/gamertag_finder/availability.py` — owns the availability-checking
   boundary. It must return `UNKNOWN` unless a safe, official method is verified;
   it must not claim or reserve names.
@@ -121,7 +124,8 @@ relevant stages.
 - `tests/test_app.py` — checks application startup and menu coordination.
 - `tests/test_importer.py` — checks normal, duplicate, blank, empty, missing,
   unreadable, unusual-character, whitespace, BOM, and invalid-encoding files.
-- `tests/test_validator.py` — checks valid and invalid name cases.
+- `tests/test_validator.py` — checks length boundaries, supported and
+  unsupported characters, spaces, diacritics, empty input, and batch results.
 - `tests/test_availability.py` — checks status handling, including safe
   `UNKNOWN` behavior when no verified method is available.
 - `tests/test_results.py` — checks displayed statuses and summary counts.
@@ -181,3 +185,45 @@ code existed at the end of Stage 1, so module tests were deferred then.
 - A live console run imported a sample containing whitespace, a blank line, a
   case-insensitive duplicate, and a Unicode name; the summary and imported list
   matched the input.
+
+## Stage 4 format rules and verification
+
+This app validates **modern** gamertag components, not classic gamertags or the
+display suffix. Rules were checked against Microsoft documentation on
+2026-11-20:
+
+- The published GDK baseline is at most 12 rendered characters. Supported
+  combining diacritics do not add another rendered character; the GDK docs
+  allow up to one diacritic per character.
+- Microsoft documents specific creatable character ranges: Latin letters and
+  digits, apostrophe, U+0020 space, selected Latin extensions, and listed
+  language ranges for Cyrillic, Hebrew, Arabic/Urdu, Devanagari, Bengali, Thai,
+  Greek, Hangul, Hiragana, Katakana, and CJK. Other Unicode characters and
+  reserved punctuation are rejected.
+- An Xbox Insider announcement dated 2026-06-24 describes a preview allowing
+  up to 15 rendered characters for unique, available gamertags. Names that
+  need a suffix or contain non-Latin characters may remain limited to 12.
+  Accordingly, this offline validator accepts 13–15 character Latin names with
+  an explicit preview/eligibility note; it cannot determine availability or
+  whether that preview applies to the user's account.
+- The official GDK sources reviewed did not state a minimum length or rules
+  about where spaces may appear or whether spaces may repeat. The validator
+  rejects an empty string, but does not invent a positive minimum or space
+  placement restriction. The Stage 3 importer still trims surrounding
+  whitespace from file entries.
+- No name validation establishes availability, eligibility, or claimability.
+
+Sources:
+
+- [Microsoft GDK: Modern gamertags definition and terminology](https://learn.microsoft.com/en-us/gaming/gdk/docs/services/fundamentals/identity/user-profile/gamertags/live-modern-gamertags-definition?view=gdk-2604)
+- [Microsoft GDK: UTF-8 character ranges for modern gamertags](https://learn.microsoft.com/en-us/gaming/gdk/docs/services/fundamentals/identity/user-profile/gamertags/live-modern-gamertags-unicode?view=gdk-2610)
+- [Xbox Wire: Unique gamertags expanded to 15 characters (Insider preview)](https://news.xbox.com/en-us/2026/06/24/xbox-insiders-august-2026-console-features/)
+
+- Choose **Check Gamertags** after importing to see `VALID` and `INVALID`
+  groups, invalid reasons, counts, and any preview caveats. No online check is
+  made.
+- `python -m unittest discover -s tests -v` runs the Stage 2–4 tests.
+- All 36 automated tests passed, including validation boundaries, supported
+  Unicode scripts, invalid characters, reasons, and menu integration.
+- A console run confirmed that the empty-import message appears, then validated
+  a mixed sample into separate valid and invalid groups with counts.

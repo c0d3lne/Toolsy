@@ -2,6 +2,7 @@
 
 from .importer import GamertagImportError, import_gamertags
 from .menu import MENU_OPTIONS, display_menu
+from .validator import ValidationStatus, validate_gamertags
 
 EXIT_OPTION = "9"
 FEATURE_OPTIONS = tuple(
@@ -62,6 +63,50 @@ def main(input_fn=None, output_fn=None):
             if result.gamertags:
                 for gamertag in result.gamertags:
                     write_output(f" - {gamertag}")
+            else:
+                write_output(" (none)")
+            continue
+
+        if selection == "2":
+            if not imported_gamertags:
+                write_output(
+                    "No gamertags have been imported. "
+                    "Import a TXT file first."
+                )
+                continue
+
+            validation_results = validate_gamertags(imported_gamertags)
+            valid_results = tuple(
+                result
+                for result in validation_results
+                if result.status is ValidationStatus.VALID
+            )
+            invalid_results = tuple(
+                result
+                for result in validation_results
+                if result.status is ValidationStatus.INVALID
+            )
+
+            write_output(
+                "Formatting check only; online availability was not checked."
+            )
+            write_output(f"Valid: {len(valid_results)}")
+            write_output("VALID gamertags:")
+            if valid_results:
+                for result in valid_results:
+                    write_output(f" - {result.gamertag}")
+                    if result.note:
+                        write_output(f"   Note: {result.note}")
+            else:
+                write_output(" (none)")
+
+            write_output(f"Invalid: {len(invalid_results)}")
+            write_output("INVALID gamertags:")
+            if invalid_results:
+                for result in invalid_results:
+                    write_output(
+                        f" - {result.gamertag}: {result.reason}"
+                    )
             else:
                 write_output(" (none)")
             continue
