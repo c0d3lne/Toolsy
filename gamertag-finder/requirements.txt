@@ -1,0 +1,2 @@
+# No third-party runtime dependencies are planned.
+# Keep this file empty of packages unless a later stage proves one is needed.
