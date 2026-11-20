@@ -8,7 +8,7 @@ safe, official checking method is verified.
 ## Project checklist
 
 - [x] Stage 1 – Create the project folder structure.
-- [ ] Stage 2 – Create the main application entry point.
+- [x] Stage 2 – Create the main application entry point.
 - [ ] Stage 3 – Build the TXT gamertag importer.
 - [ ] Stage 4 – Build the gamertag validation system.
 - [ ] Stage 5 – Investigate and implement a verified availability-checking method.
@@ -23,7 +23,8 @@ safe, official checking method is verified.
 - [ ] Stage 14 – Review security, dependencies and unexpected behaviour.
 - [ ] Stage 15 – Prepare the finished project for download and local Windows use.
 
-Only Stage 1 is complete. No application modules have been implemented yet.
+Stages 1 and 2 are complete. Stage 2 adds only the launcher, menu, and
+placeholder responses; the listed product features are not implemented yet.
 
 ## Planned folder structure
 
@@ -32,6 +33,7 @@ gamertag-finder/
 ├── README.md
 ├── requirements.txt
 ├── .gitignore
+├── main.py
 ├── data/
 │   ├── imports/                 # Local gamertag and proxy input files
 │   └── exports/                 # Generated CSV and TXT results
@@ -40,6 +42,7 @@ gamertag-finder/
 │       ├── __init__.py
 │       ├── __main__.py
 │       ├── app.py
+│       ├── menu.py
 │       ├── config.py
 │       ├── models.py
 │       ├── importer.py
@@ -64,10 +67,13 @@ gamertag-finder/
     └── test_terminal_ui.py
 ```
 
-The `.py` files above are planned only; they will be added in later stages.
-`data/imports/` and `data/exports/` are created now so the project structure is
-in place. Add local `gamertags.txt` and `proxies.txt` files to `data/imports/`
-when implementing the relevant stages.
+`main.py`, `src/gamertag_finder/__init__.py`,
+`src/gamertag_finder/__main__.py`, `src/gamertag_finder/app.py`,
+`src/gamertag_finder/menu.py`, and `tests/test_app.py` are implemented in Stage
+2. Other `.py` files in the tree are planned for later stages.
+`data/imports/` and `data/exports/` are ready for local files. Add
+`gamertags.txt` and `proxies.txt` to `data/imports/` when implementing the
+relevant stages.
 
 ## Planned Python files
 
@@ -76,7 +82,11 @@ when implementing the relevant stages.
 - `src/gamertag_finder/__init__.py` — marks the source folder as a Python package.
 - `src/gamertag_finder/__main__.py` — supports launching the package with
   `python -m gamertag_finder`.
-- `src/gamertag_finder/app.py` — coordinates the application workflow and menu.
+- `src/gamertag_finder/app.py` — runs the menu loop, validates selections, exits
+  cleanly, and reports unfinished options without pretending they work.
+- `src/gamertag_finder/menu.py` — contains the ASCII banner and menu labels.
+  Stage 2 keeps this presentation deliberately simple; the fuller terminal
+  styling remains for Stage 11.
 - `src/gamertag_finder/config.py` — centralizes local input, watchlist, and
   export paths and application settings.
 - `src/gamertag_finder/models.py` — defines shared gamertag and result-status
@@ -134,4 +144,15 @@ when implementing the relevant stages.
 ## Stage 1 verification
 
 The directories and README checklist were created and inspected. No application
-code exists yet, so module tests are deferred until those modules are built.
+code existed at the end of Stage 1, so module tests were deferred then.
+
+## Stage 2 implementation and verification
+
+- `main.py` is the local launcher; run it from this folder with
+  `python main.py`.
+- The menu and app loop live in separate package modules. Unfinished options
+  only display “not available yet”; no feature behavior is simulated.
+- `python -m unittest discover -s tests -v` runs the Stage 2 menu tests.
+- Stage 2 tests cover the logo and all menu labels, every unfinished feature
+  option, invalid selections, exit, and end-of-input handling.
+- No third-party packages were installed.
