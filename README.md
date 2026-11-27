@@ -70,9 +70,11 @@ Toolsy is currently under active development.
 Features and functionality are being introduced and improved over time.
 Some features described above may still be in development.
 ---
-##💻 Developer
+## Developer
 Created and developed by **C0d3lne**.
+
 Written by **tokioweb**
+
 Built with curiosity, determination and a passion for software development.
 ---
 ### Support the Project
