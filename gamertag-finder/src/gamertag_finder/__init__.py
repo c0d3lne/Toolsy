@@ -1,1 +1,0 @@
-"""Gamertag Finder application package."""
